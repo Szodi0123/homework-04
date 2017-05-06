@@ -119,6 +119,8 @@ library(reshape2)
 library(data.table)
 
 #Átalakítom az adataimat
+
+
 abra_1 <-
   melt(
     hiphop_cand_lyrics,
@@ -126,8 +128,8 @@ abra_1 <-
     measure.vars = "candidate"
   )
 
-setDT(abra_1)[,freq := .N, by = abra_1$candidate]
-
+#Elkészítem az y tengelyre kerülő változót, ami a freq lesz.
+abra_1$freq <- 1
 
 #Ide helytakarékosság miatt elmentettem a neveket/vez.neveket/színkódokat.
 teljes_nevek <- c("Ben Carson",
@@ -138,6 +140,8 @@ teljes_nevek <- c("Ben Carson",
                   "Jeb Bush",
                   "Mike Huckabee",
                   "Ted Cruz")
+
+teljes_nevek == upcase_vez_nevek
 
 upcase_vez_nevek <- c("CARSON",
                       "SANDERS",
@@ -157,16 +161,14 @@ szinkodok <- c("#a7d65d",
                "#fbcee5",
                "#e58cc2")
 
-#Ábrázolás: Ennyit tudtam belőle kihozni, de így is nagyon sok idő volt. 
-#Nem tudom, hogy a clintonos tweetek miért másznak egymásra. :'(. Plusz
-#Itt a nyers gyakoriság van, bár gondolom ez a kisebbik baj.
 
-ggplot(abra_1, aes(x = album_release_date, y = freq)) +
-  geom_point(
-    aes(colour = abra_1$candidate),
+require(ggplot2)
+
+ggplot(abra_1, aes(x = album_release_date,y= freq)) +
+  geom_point(aes(colour = abra_1$candidate),
     stat = "identity",
-    size = 3,
-    position = position_stack(vjust = 0, reverse = T)
+    size = 4,
+    position = position_stack(reverse=T)
   ) +
   scale_colour_manual(
     name = "",
@@ -194,6 +196,7 @@ ggplot(abra_1, aes(x = album_release_date, y = freq)) +
   )) +
   scale_x_continuous(breaks=c(1990,1995,2000,2005,2010,2015))
 
+
 # Exportálás.
 ggsave("/Users/Adam/homework-04/fig/hiphop1.png")
 
@@ -208,22 +211,25 @@ neutral <- subset(hiphop_cand_lyrics,sentiment == "neutral")
 #mert nem mindenkinek van sentimentes tweetje. 
 
 
-# Pozitív sentiment
+# Pozitív sentiment táblakezelés
 positive<-
   melt(
     positive,
-    id.vars = c("album_release_date", "candidate"),
+    id.vars = c("album_release_date", "candidate", "sentiment"),
     measure.vars = "candidate"
   )
 
 
-setDT(positive)[,freq := .N, by = positive$candidate]
 
+#Y tengelyhez
+positive$freq <- 1
+
+#Ábrázolás
 pos <- ggplot(positive, aes(x = album_release_date, y =freq)) +
   geom_point(
     aes(colour = positive$candidate),
     stat = "identity",
-    size = 3,
+    size = 4,
     position = position_stack(vjust = 0, reverse = T)
   ) +
   scale_colour_manual(
@@ -264,18 +270,20 @@ pos <- ggplot(positive, aes(x = album_release_date, y =freq)) +
 negative<-
   melt(
     negative,
-    id.vars = c("album_release_date", "candidate"),
+    id.vars = c("album_release_date", "candidate", "sentiment"),
     measure.vars = "candidate"
   )
 
-setDT(negative)[,freq := .N, by = negative$candidate]
+
+#Y tengelyhez
+negative$freq <- 1
 
 
-neg <- ggplot(negative, aes(x = album_release_date, y =freq)) +
+neg <- ggplot(negative, aes(x = album_release_date, y= freq)) +
   geom_point(
     aes(colour = negative$candidate),
     stat = "identity",
-    size = 3,
+    size = 4,
     position = position_stack(vjust = 0, reverse = T)
   ) +
   scale_colour_manual(
@@ -317,17 +325,17 @@ neg <- ggplot(negative, aes(x = album_release_date, y =freq)) +
 neutral<-
   melt(
     neutral,
-    id.vars = c("album_release_date", "candidate"),
+    id.vars = c("album_release_date", "candidate", "sentiment"),
     measure.vars = "candidate"
   )
 
-setDT(neutral)[,freq := .N, by = negative$neutral]
+neutral$freq <- 1
 
 neut <- ggplot(neutral, aes(x = album_release_date, y =freq)) +
   geom_point(
     aes(colour = neutral$candidate),
     stat = "identity",
-    size = 3,
+    size = 4,
     position = position_stack(vjust = 0, reverse = T)
   ) +
   scale_colour_manual(
@@ -371,41 +379,49 @@ osszefuzott <- grid.arrange(pos,neg,neut,nrow=1,
                             top="Candidate mentions, by sentiment")
 
 # Exportálás.
-ggsave("/Users/Adam/homework-04/fig/hiphop2.png", width = 15.4, height = 5.82)
+ggsave("/Users/Adam/homework-04/fig/hiphop2.png", plot=osszefuzott,
+       width = 15.4, height = 5.82)
 
 
 #3.2 Egyéni ábra elkészítése
-#Itt arra gondoltam, hogy megnézem, hogy a két elnökjelöltnél 
+#Itt arra gondoltam, hogy megnézem, hogy a két elnökjelöltnél a pénz témájú
+#dalszövegeken belül hogyan oszlik meg a dalszövegek szentimentje.
 
 sajat_abra <- subset(hiphop_cand_lyrics,theme == "money")
 
-#Ábrázolás
+
+#Ábrázoláshoz előkészítés. Itt a sentiment és a candidate szerint csoportosítok
+#majd leszámláltatom vele külön, hogy mennyi az összes és a perc oszlopba
+#százalékot számoltatok. Így kerültem meg, hogy különböző mennyiségű 
+#money-s tweetjük van (Trumpnak sokkal több van).
 library(dplyr)
-sajat_abra2 <- sajat_abra %>% 
+sajat_abra <- sajat_abra %>% 
   group_by(candidate, sentiment) %>% 
   summarise(count=n()) %>% 
   mutate(perc=count/sum(count))
 
-
-#Ábrázolás
-library(dplyr)
-sajat_abra2 <- sajat_abra %>% 
-  group_by(candidate, sentiment) %>% 
-  summarise(count=n()) %>% 
-  mutate(perc=count/sum(count))
-
-
+#Nem törődtem sokat a külalakkal, inkább az ábra a fontos
 ggplot(data = sajat_abra2, aes(x=factor(candidate), y= perc*100, 
                                fill=sentiment)) +
   geom_bar(stat = "identity", position = position_dodge()) +
-  theme(plot.title = element_text(hjust = 0.6)) +
-  labs(title = "A pénz témájú dalszövegek érzelmi töltete,
-jelöltek szerint", y = "(%)", x="") +
+  theme(plot.title = element_text(hjust = 0.59)) +
+  labs(title = "A pénz témájú dalszövegek érzelmi töltete, jelöltenként",
+       y = "(%)", x="") +
   scale_fill_manual(name = "Érzelmi töltet",
                     breaks = c("negative", "neutral", "positive"),
                     labels = c("Negatív", "Semleges", "Pozitv"), 
                     values= c("aquamarine3", "bisque3", "coral3"))
 
 
+#Innen pedig jól látszik, hogy valahogy a pozitívak vannak többségben. 
+#Bár ez egy kicsit azért fura. 
+
 ggsave("/Users/Adam/homework-04/fig/hiphop3.png")
+
+
+#IV. feladat
+
+
+
+
 
