@@ -95,7 +95,6 @@ rm(whatslangauge)
 rm(i)
 
 
-
 #2.4 feladat: Függvény
 source("src/homework-04-functions.R")
 
@@ -166,6 +165,7 @@ szinkodok <- c(
 )
 
 
+#Ábrázolás
 ggplot(abra_1, aes(x = album_release_date, y = freq)) +
   geom_point(
     aes(colour = abra_1$candidate),
@@ -335,7 +335,9 @@ neutral <-
     measure.vars = "candidate"
   )
 
+# Y tengelyhez
 neutral$freq <- 1
+
 
 neut <- ggplot(neutral, aes(x = album_release_date, y = freq)) +
   geom_point(
