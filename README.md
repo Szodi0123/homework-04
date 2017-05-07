@@ -33,8 +33,14 @@ A ```fivethirtyeight``` package-ben van egy ```hiphop_cand_lyrics``` dataset. A 
 
 ## IV. feladat (6 pont)
 A ```clinton_trump_tweets.csv``` tartalmaz egy ```text_sentiment``` és egy ```text_emotion``` változót. Szentiment- és az emócióelemzés során a szövegek által közvetített érzelmeket, attitűdöket, véleményeket azonosítjuk. A szentiment egy szöveg polaritását jelzi, azaz, hogy a szöveg negatív, pozitív vagy semleges-e. Az emócióelemzés során pedig általában a hat emberi alapérzelmet (bánat, düh, öröm, undor, félelem, meglepődés) próbáljuk detektálni a szövegekben, ahogyan a tweetek esetében is történt. Bizonyos szentimentkategóriák sokszor együttjárnak valamelyik emóciókategóriával, de nem minden esetben és nem is feleltethetőek meg egymásnak.
+
 1. Hasonlítsd össze Hillary Clinton és Donald Trump tweetjeinek szentimentjeit és emócióit. Vizsgáld meg oszlopdiagrammal és idősoros ábrával az eltéréseket. Nézd meg, hogy statisztikailag szignifikáns-e a különbség a két jelölt szentimentjeinek ill. emócióinak száma között.
+
+
 2. Többen feltételezték, hogy Trump tweetjeit (legalább) két különböző ember írja, az androidosokat feltételezhetően Trump, az iphone-osokat pedig valaki más (a mi adatainkban a ```source_url``` oszlop tartalmaz erre vonatkozó információkat). Ennek a feltételezésnek a bizonyítására készült egy tök jó szövegelemzés: http://varianceexplained.org/r/trump-tweets/. A szerző itt is összehasonlítja a tweetek szentimentjét (bár más kategóriarendszert használva). Vizsgáld meg vizuálisan, hogy a mi adatunk szerint is különböznek-e a két forrásból származó tweetek szentimentjei ill. emóciói. Nézd meg, hogy statisztikailag szignifikáns-e a különbség.
+
+
+
 3. Készíts az elemzéshez dokumentációt, ami tartalmazza az ábrákat és a tesztek eredményeit, valamint ezek szöveges értelmezéseit. A dokumentáció legyen pdf vagy html kiterjesztésű és mentsd egy ```doc``` nevű mappába. A dokumentáció készülhet szabadon választott eszközzel, bármilyen szövegszerkesztővel, de a legjobb, ha R markdown fájlt készítesz, és azt mented ki html-be vagy pdf-be. Utóbbi esetben az Rmd fájl is legyen a ```doc``` mappában. A ```markdownr``` és ```knitr``` package-ek használatáról [itt](https://www.r-bloggers.com/r-markdown-and-knitr-tutorial-part-1/) olvashatsz például, vagy az órai anyagok ```doc``` mappáit is veheted példának. Az ```markdownr``` és ```knitr``` package-ek használata egyáltalán nem kötelező, de elég jó cucc és hasznos skill, pl. ha riportot szeretne készíteni az ember.
 
 ---

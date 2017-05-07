@@ -1,0 +1,195 @@
+---
+title: "prog1_homework04-excIV"
+author: "Szilágyi Ádám"
+date: '2017 05 07 '
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r Adattábla beolvasása}
+tweets <-
+  read.table(file = "/Users/Adam/homework-04/data/clinton_trump_tweets.csv", sep = ";", header = T)
+```
+```{r Használt package-k behívása}
+require(ggplot2)
+require(grid)
+require(gridExtra)
+```
+
+
+## Leírás:
+Sokan állítják, hogy Trump tweetjeit a választási időszakban többen, 
+legalább ketten írták. A következőkben megvizsgálom, hogy az imént behívott
+tweets dataset alapján igaznak, vagy inkább hamisnak tűnik ez a feltevés.
+
+## Vizsgálat:
+
+```{r Lehetséges értékek ellenőrzése}
+levels(as.factor(tweets$source_url))
+```
+
+Itt láthatjuk, hogy az 4. és az 5. url az, amelyeknél beazonosítható, hogy 
+milyen eszközről posztolták. Így ezt a kettőt kell kiválasztanom. (Hozzá kell
+tenni, hogy érdemes lehet az ipad-et is bevenni az elemzésbe, de most ettől
+eltekintek). A kiválasztott linkek szerint szűrök, az eredményt a forras_vizsg
+nevű datasetben tárolom el.
+
+```{r Tábla elkészítése}
+forras_vizsg <-
+  subset(
+    tweets,
+    source_url == "http://twitter.com/download/iphone" |
+      source_url == "http://twitter.com/download/android" &
+      handle == "realDonaldTrump"
+  )
+```
+
+Majd ezt követően végigfutok az eseteken és egy új ' op_rendsz' változóba bele-
+írom, hogy iPhone-ról, vagy Androidról posztolták. (Attól most tekintsünk el, 
+hogy az iPhone nem operációs rendszer.)
+
+```{r Címkézés}
+forras_vizsg$op_rendsz <- NA
+
+forras_vizsg$op_rendsz <- NA
+for (i in 1:nrow(forras_vizsg)) {
+  if (forras_vizsg$source_url[i] == "http://twitter.com/download/iphone") {
+    forras_vizsg$op_rendsz[i] <- "Iphone"
+  }else{
+    forras_vizsg$op_rendsz[i] <- "Android"
+  }
+}
+
+#Ellenőrzés:
+levels(as.factor(forras_vizsg$op_rendsz))
+```
+
+Miután csak a fent látható két típus maradt csak a datasetben, elkezdődhet az
+adatelemzés. Ezt két módon teszem meg:
+
+ - A szövegek szentimentjeit vizsgálom az op_rendsz változó szerint
+ - A szövegek érzelmi besorolását vizsgálom az op_rendsz változó szerint.
+ 
+ A vizsgálat első lépéseként az ábrákat elemezzük.
+ 
+ 
+```{r Ábrázolás}
+require(ggplot2)
+
+#Sentiment
+source_sent <- ggplot(data = forras_vizsg,
+                      aes(x = text_sentiment, fill = op_rendsz)) +
+  geom_bar(stat = "count",
+           position = position_dodge(),
+           show.legend = T) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Sentiment kategóriák forrásonként",
+       y = "Tweetek száma", x = "") +
+  scale_fill_manual(name = "Operációs rendszer",
+                    values = c(
+  "#a7d65d",
+  "#6ac1a5",
+  "#fd8977",
+  "#fdbf7b",
+  "#96d7f8",
+  "#fed844",
+  "#fbcee5",
+  "#e58cc2")) +
+  scale_x_discrete(
+    breaks = c("negative", "neutral", "positive"),
+    labels = c("Negatív", "Semleges", "Pozitív")
+  )
+
+
+#Emotion
+source_emo <- ggplot(data = forras_vizsg,
+                     aes(x = text_emotion, fill = op_rendsz)) +
+  geom_bar(stat = "count",
+           position = position_dodge(),
+           show.legend = F) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Érzelem-kategóriák forrásonként",
+       y = "Tweetek száma", x = "") +
+  scale_fill_manual(name = "Operációs rendszer",
+                    values = c(
+  "#a7d65d",
+  "#6ac1a5",
+  "#fd8977",
+  "#fdbf7b",
+  "#96d7f8",
+  "#fed844",
+  "#fbcee5",
+  "#e58cc2")) +
+  scale_x_discrete(
+    breaks = c(
+      "anger",
+      "disgust",
+      "fear",
+      "joy",
+      "sadness",
+      "surprise",
+      "unknown"
+    ),
+    labels = c(
+      "harag",
+      "undor",
+      "félelem",
+      "öröm",
+      "szomorúság",
+      "meglepettség",
+      "nem felismerhető"
+    )
+  )
+
+grid.arrange(source_emo, source_sent)
+```
+
+A fenti ábra alapján megállapítható, hogy az Androidról írt tweetekben
+közvetített érzelmek jóval behatárolhatóbbak voltak, mint az IPhone-ról írt 
+posztok. Látható ugyanakkor az is, hogy a két oszlopban fellelhető egy mintázat, 
+mely feltehetőleg annak köszönhető, hogy azonos kommunikációs stratégia áll ezek
+hátterében.
+
+Érdekesebb viszont az alsó ábra, melyen jól látszik, hogy a közvetített/detektált
+érzelemben már eltérnek az eszközök. Az iPhoneról írt posztok pozitívabbak, mint
+az Android esetében. Utóbbi pedig a negatív és a semleges kategóriában is "vezet".
+
+Az ábrák után érdemes megvizsgálni számszerűen is a feltevésünket. Ehhez kereszt-
+táblás elemzést alkalmazok. Elsőként az Érzelem-kategóriákat vizsgálom.
+
+
+```{r 1. teszt: emócióra}
+chisq.test(forras_vizsg$op_rendsz, forras_vizsg$text_emotion)
+```
+
+A próba p értéke alapján tehát azt mondhatjuk, hogy a két eszköz (operációs rendszer)
+szerint szignifikáns különbség van az 6+1 kategóriás érzelmi besorolások között.
+
+Zárásként következzen a sentiment kategóriák szerinti elemzés.
+
+```{r 2. teszt: szentimentre}
+chisq.test(forras_vizsg$op_rendsz, forras_vizsg$text_sentiment)
+```
+
+A teszt ismételten szignifikáns különbséget mutat, így az eszközök szerint szig.
+különbség van a szentment-kategóriák terén is.
+
+## Összefoglalva: 
+
+Az adatok alapján azt mondhatjuk, hogy az iPhone-os és Androidos tweetek külön-
+böznek egymástól. A különbség az ábrák alapján is látszott, ám a khi-négyzet 
+próba is alátámasztotta azt. 
+
+Az eredmények alapján kijelenthető, hogy Trump tweetjei különböznek a szerint, 
+hogy milyen eszközről írták azokat. Innentől pedig a sok lehetséges közül, egy 
+valószínű magyarázat, hogy több személy áll a kérdéses tweetek mögött.
+
+
+
+
+
+
+
+
