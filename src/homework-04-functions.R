@@ -7,7 +7,6 @@
 
 ### 1. Függvény:
 
-
 what_about_tweets <- function(candidate, n = 20) {
   ### Rendezés:
   for (i in 1:nrow(tweets))
@@ -68,3 +67,5 @@ cat("Válassz 'Hillary Clinton' és 'Donald Trump' közül.
     )
   }
 }
+
+
